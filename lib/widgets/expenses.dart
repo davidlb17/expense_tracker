@@ -28,12 +28,21 @@ class _ExpensesState extends State<Expenses> {
     ),
   ];
 
-  void _openCreationExpense() {
+  void _openModalCreationExpense() {
     showModalBottomSheet(
+      isScrollControlled: true,
       context: context,
       isDismissible: false,
-      builder: (context) => const NewExpense(),
+      builder: (context) => NewExpense(
+        onAddExpense: _addExpense,
+      ),
     );
+  }
+
+  void _addExpense(Expense expense) {
+    setState(() {
+      _registeredExpenses.add(expense);
+    });
   }
 
   @override
@@ -43,7 +52,7 @@ class _ExpensesState extends State<Expenses> {
         title: const Text('Expense tracker'),
         actions: [
           IconButton(
-            onPressed: _openCreationExpense,
+            onPressed: _openModalCreationExpense,
             icon: const Icon(Icons.add),
           )
         ],

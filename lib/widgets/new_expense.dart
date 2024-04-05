@@ -2,7 +2,9 @@ import 'package:expense_tracker/models/expense.dart';
 import 'package:flutter/material.dart';
 
 class NewExpense extends StatefulWidget {
-  const NewExpense({super.key});
+  const NewExpense({super.key, required this.onAddExpense});
+
+  final void Function(Expense expense) onAddExpense;
 
   @override
   State<NewExpense> createState() {
@@ -15,7 +17,7 @@ class _NewExpenseState extends State<NewExpense> {
   final _amountController = TextEditingController();
   DateTime? _pickedDate;
   //dropdown doesnt accept controllers
-  Category _category;
+  Category _category = Category.leisure;
 
   //allows to delete the controller
   @override
@@ -24,6 +26,41 @@ class _NewExpenseState extends State<NewExpense> {
     _titleController.clear();
   }
 
+  //method to
+  void _submitExpenseData() {
+    final enteredAmount = double.tryParse(_amountController.text);
+    if (_titleController.text.trim().isEmpty ||
+        enteredAmount == null ||
+        enteredAmount <= 0 ||
+        _pickedDate == null) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Invalid input'),
+          content: const Text('Please check the data'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('OK'),
+            )
+          ],
+        ),
+      );
+      return;
+    }
+
+    widget.onAddExpense(Expense(
+        title: _titleController.text,
+        amount: enteredAmount,
+        date: _pickedDate!,
+        category: _category));
+
+    Navigator.pop(context);
+  }
+
+  //method to open the date picker
   void _presentDatePicker() async {
     final now = DateTime.now();
     final pickedDate = await showDatePicker(
@@ -49,7 +86,7 @@ class _NewExpenseState extends State<NewExpense> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(16, 48, 16, 16),
       child: Column(
         children: [
           TextField(
@@ -91,8 +128,30 @@ class _NewExpenseState extends State<NewExpense> {
               )
             ],
           ),
+          const SizedBox(
+            height: 16,
+          ),
           Row(
             children: [
+              DropdownButton(
+                value: _category,
+                items: Category.values
+                    .map(
+                      (category) => DropdownMenuItem(
+                          value: category,
+                          child: Text(category.name.toUpperCase())),
+                    )
+                    .toList(),
+                onChanged: (value) {
+                  if (value == null) {
+                    return;
+                  }
+                  setState(() {
+                    _category = value;
+                  });
+                },
+              ),
+              const Spacer(),
               TextButton(
                 onPressed: () {
                   Navigator.pop(context);
@@ -103,19 +162,9 @@ class _NewExpenseState extends State<NewExpense> {
                 onPressed: () {
                   print(_amountController.text);
                   print(_titleController.text);
+                  _submitExpenseData();
                 },
                 child: const Text('Save data'),
-              ),
-              DropdownButton(
-                items: Category.values
-                    .map(
-                      (category) => DropdownMenuItem(
-                          child: Text(category.name.toUpperCase())),
-                    )
-                    .toList(),
-                onChanged: (value) {
-                  print(value);
-                },
               ),
             ],
           )
